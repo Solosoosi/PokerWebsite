@@ -286,9 +286,9 @@ body.idle{cursor:none}
   setInterval(paintClock,250);
 
   // ---- background slideshow ----
-  // backgrounds/list.json names the photos in backgrounds/. They play in a shuffled loop, each drifting
-  // with a slow zoom. A photo almost the screen's shape fills it; any other is shown whole, a bit
-  // smaller than the screen so it isn't blown up or cropped, over a blurred copy of itself.
+  // backgrounds/list.json names the photos in backgrounds/: already cropped to 16:9 around the faces and
+  // AI-upscaled to 1920x1080. They play in a shuffled loop, each drifting with a slow zoom. On a landscape
+  // screen they fill it; on a portrait one each is shown whole, smaller, over a blurred copy of itself.
   var SLIDE_MS=9000, FADE_MS=1600;
   var bgLayers=document.querySelectorAll(".bg-img"), bgList=[], bgAt=0, bgFront=0, bgTimer=null, bgFails=0;
   var still=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -311,7 +311,7 @@ body.idle{cursor:none}
     var layer=bgLayers[bgFront], W=innerWidth, H=innerHeight, A=W/H, a=img.naturalWidth/img.naturalHeight, r=Math.random;
     var w, h, from, to, zoomIn=r()<.5;
     layer.innerHTML="";
-    if(a/A>.9&&a/A<1.11){
+    if(a/A>.7&&a/A<1.45){
       var tall=a<A; w=tall?W*1.04:H*1.04*a; h=tall?w/a:H*1.04;
       // Any position between (W-w, H-h) and (0, 0) keeps the screen covered, and zooming in from the top-left corner never opens a gap.
       var dx=W-w, dy=H-h;
