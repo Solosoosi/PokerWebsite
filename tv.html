@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Poker Night TV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+body{overflow:hidden}
+.tv{height:100vh;height:100dvh;display:grid;grid-template-rows:auto 1fr auto;gap:2vh;padding:2.6vh 3vw 3vh}
+.top{display:flex;justify-content:space-between;align-items:center;gap:2vw}
+.brand{display:flex;align-items:baseline;gap:1.2vw;min-width:0}
+.brand .suits{font-size:2.4vh;letter-spacing:.3em}
+.brand .lg{font-size:3.8vh;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand .round{color:var(--muted);font-size:2.4vh;white-space:nowrap}
+.top-right{display:flex;align-items:center;gap:1.4vw}
+.conn{color:var(--muted);font-size:1.9vh;white-space:nowrap}
+.conn .dot{display:inline-block;width:1vh;height:1vh;border-radius:50%;background:var(--rose);margin-right:.7vh;vertical-align:middle}
+.conn.on .dot{background:var(--brass)}
+.top-btn{font-size:1.9vh;padding:.9vh 1.4vw}
+:fullscreen .fs{display:none}
+.ctl-panel{position:fixed;top:0;right:0;bottom:0;width:min(440px,94vw);z-index:20;display:none;flex-direction:column;
+  background:var(--bg2);border-left:1px solid var(--line);box-shadow:-12px 0 30px rgba(0,0,0,.45)}
+.ctl-panel.on{display:flex}
+.ctl-panel .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:18px}
+.ctl-panel .bar .btn{font-size:14px;padding:7px 14px}
+.ctl-panel iframe{flex:1;width:100%;border:0;background:var(--bg2)}
+
+.stage{display:grid;grid-template-columns:1fr 25vw;gap:3vw;min-height:0}
+.clockbox{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:0}
+.lvl{font-size:4vh;color:var(--muted)}
+.lvl .paused{display:none;font-family:Inter,sans-serif;font-size:2.2vh;font-weight:600;color:var(--rose);border:1px solid var(--rose);border-radius:999px;padding:.3vh 1.2vh;margin-left:1.2vh;vertical-align:middle;letter-spacing:.08em;text-transform:uppercase}
+.lvl .paused.on{display:inline-block}
+.time{font-weight:600;font-variant-numeric:tabular-nums;font-size:min(15vw,28vh);line-height:1;letter-spacing:-.01em;margin:1.2vh 0 2.4vh}
+.time.paused{color:var(--muted)}
+.time.final{font-family:Fraunces,Georgia,serif;font-weight:500;color:var(--brass);font-size:min(9vw,16vh)}
+.blinds{display:flex;align-items:baseline;gap:1.4vw}
+.blinds .lab,.next .lab{font-size:2.4vh;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.blinds .big{font-family:Fraunces,Georgia,serif;font-size:10vh;color:var(--brass);line-height:1}
+.next{font-size:3.4vh;margin-top:2vh;display:flex;align-items:baseline;gap:1vw;font-variant-numeric:tabular-nums}
+.next .dur{color:var(--muted);font-size:2.4vh}
+.note{font-size:2.5vh;color:var(--muted);margin-top:1vh}
+
+.side{display:flex;flex-direction:column;gap:2vh;min-height:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:1.6vh;padding:1.6vh 1.6vw}
+.stand{flex:1;min-height:0;overflow:hidden}
+.side-h{font-family:Fraunces,Georgia,serif;font-size:2.7vh;margin-bottom:1vh}
+.stand ol{list-style:none;margin:0;padding:0}
+.stand li{display:grid;grid-template-columns:3vh 1fr auto;gap:1vw;align-items:center;font-size:2.3vh;padding:.55vh 0;border-top:1px solid var(--line-soft)}
+.stand li:first-child{border-top:0}
+.stand .rk{color:var(--muted);font-variant-numeric:tabular-nums}
+.stand .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stand .pt{font-weight:600;font-variant-numeric:tabular-nums}
+.stand li.lead .rk,.stand li.lead .pt{color:var(--brass)}
+.stand li.wait{display:block;color:var(--muted);font-size:2.2vh}
+.join{display:flex;gap:1.4vw;align-items:center}
+.qr{width:14vh;height:14vh;flex:none;background:var(--cream);padding:1vh;border-radius:1vh}
+.qr svg{display:block;width:100%;height:100%}
+
+.players{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:1.4vw}
+.pc{background:var(--surface);border:1px solid var(--line);border-radius:1.6vh;padding:1.2vh;text-align:center;position:relative;min-width:0}
+.pc .avatar{height:16vh;border-radius:1.1vh;font-size:8vh}
+.pc .nm{font-size:2.6vh;font-weight:600;margin-top:1vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc .sub{font-size:1.9vh;color:var(--muted);min-height:1.5em}
+.pc .sub b{color:var(--cream);font-weight:600}
+.pc.out{background:var(--bg2)}
+.pc.out .avatar{filter:grayscale(1) brightness(.5)}
+.pc.out .nm{color:var(--muted)}
+.pc .stamp{position:absolute;top:6vh;left:50%;transform:translateX(-50%) rotate(-10deg);font-weight:600;font-size:4.6vh;line-height:1.1;letter-spacing:.14em;color:var(--rose);border:.45vh solid var(--rose);border-radius:1vh;padding:.2vh 1.4vh;background:rgba(15,38,32,.6)}
+.pc.win{border-color:var(--brass);background:rgba(203,168,106,.12)}
+.pc .crown{position:absolute;top:.2vh;right:1.2vh;color:var(--brass);font-size:4.4vh;text-shadow:0 .3vh 1vh rgba(0,0,0,.5)}
+.players .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:2.8vh;padding:5vh 0}
+</style>
+</head>
+<body>
+<div class="tv">
+  <header class="top">
+    <div class="brand">
+      <span class="suits"><span class="b">&#9824;</span><span class="r">&#9829;</span><span class="r">&#9830;</span><span class="b">&#9827;</span></span>
+      <span class="lg serif" id="leagueName">Poker Night</span>
+      <span class="round" id="round"></span>
+    </div>
+    <div class="top-right">
+      <span class="conn" id="conn"><span class="dot"></span><span id="connText">Connecting&hellip;</span></span>
+      <button class="btn ghost top-btn" id="ctlBtn">Controls</button>
+      <button class="btn ghost top-btn fs" id="fsBtn">&#x26F6; Fullscreen</button>
+    </div>
+  </header>
+  <main class="stage">
+    <div class="clockbox">
+      <div class="lvl serif"><span id="lvl">Level 1</span><span class="paused" id="paused">Paused</span></div>
+      <div class="time" id="time">30:00</div>
+      <div class="blinds"><span class="lab">Blinds</span><span class="big" id="blinds">5 / 1</span></div>
+      <div class="next" id="next"></div>
+      <div class="note" id="note"></div>
+    </div>
+    <aside class="side">
+      <div class="card stand"><div class="side-h">Standings</div><ol id="stand"></ol></div>
+      <div class="card join">
+        <div class="qr" id="qr"></div>
+        <div class="side-h">Scan to control</div>
+      </div>
+    </aside>
+  </main>
+  <section class="players" id="players"></section>
+</div>
+<!-- The phone remote, run on this screen: works with no internet and no phone. -->
+<aside class="ctl-panel" id="ctlPanel">
+  <div class="bar"><span class="serif">Controls</span><button class="btn ghost" id="ctlClose">Close</button></div>
+</aside>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="league.js"></script>
+<script src="sync.js"></script>
+<script>
+(function(){
+  "use strict";
+  var L=League, ROOM_KEY="pokerLeague.tvRoom", CACHE_KEY="pokerLeague.tv.v1";
+  function get(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
+  function set(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+  function $(id){ return document.getElementById(id); }
+
+  // The room code stays the same across refreshes so phones can find the TV again.
+  var room=get(ROOM_KEY); if(!room){ room=Sync.newRoomCode(); set(ROOM_KEY,room); }
+  // Display copy only; the phones hold the real data and resend it when they reconnect.
+  var state=null; try{ state=JSON.parse(get(CACHE_KEY)); }catch(e){}
+
+  var conn={status:"connecting",phones:0}, awake=false;
+  Sync.host(room,{
+    initial:state,
+    onState:function(s){ state=s; set(CACHE_KEY,JSON.stringify(s)); render(); },
+    onStatus:function(s,n){ conn.status=s; conn.phones=n; paintConn(); }
+  });
+
+  // ---- join code ----
+  var joinUrl=new URL("remote.html?room="+room,location.href).href;
+  var qr=qrcode(0,"M"); qr.addData(joinUrl); qr.make();
+  $("qr").innerHTML=qr.createSvgTag({cellSize:4,margin:0,scalable:true});
+
+  function paintConn(){
+    var t;
+    if(conn.status==="ready") t=conn.phones?(conn.phones+(conn.phones===1?" phone":" phones")+" connected"):"Waiting for a phone";
+    else t=conn.status==="reconnecting"?"Reconnecting…":"Connecting…";
+    if(awake) t+=" · screen stays awake";
+    if(!ac) t+=" · tap the screen to turn on sound";
+    $("connText").textContent=t;
+    $("conn").classList.toggle("on",conn.status==="ready"&&conn.phones>0);
+  }
+
+  // ---- render ----
+  function render(){
+    var lg=state&&state.league;
+    $("leagueName").textContent=lg?lg.leagueName:"Poker Night";
+    renderStandings(lg);
+    renderPlayers(lg);
+    paintClock();
+  }
+  function renderStandings(lg){
+    var ol=$("stand"); ol.innerHTML="";
+    if(!lg){ ol.innerHTML='<li class="wait">Waiting for a phone to connect&hellip;</li>'; return; }
+    L.standings(lg).forEach(function(r,i){
+      var li=document.createElement("li"); if(i===0&&r.played>0) li.className="lead";
+      li.innerHTML='<span class="rk">'+(i+1)+'</span><span class="nm">'+L.esc(r.name)+'</span><span class="pt">'+L.fmt(r.total)+'</span>';
+      ol.appendChild(li);
+    });
+  }
+  function renderPlayers(lg){
+    var box=$("players"); box.innerHTML=""; $("round").textContent="";
+    if(!lg){ box.innerHTML='<div class="empty">Scan the code with your phone to run the clock from your seat.</div>'; return; }
+    var night=state.night, v=night?L.nightView(night):null;
+    var ids=night?night.playing:lg.players.map(function(p){return p.id;});
+    if(night) $("round").textContent="Round "+night.round+" of "+L.ROUNDS+(v.done?"":" · "+v.alive.length+" of "+ids.length+" left");
+    ids.forEach(function(pid){
+      var p={name:L.playerName(lg,night,pid)};
+      var i=v?v.info[pid]:{entries:1,out:false,place:null,kos:0}, win=!!v&&v.winner===pid;
+      var bits=[];
+      if(i.guest) bits.push("Guest");
+      if(i.out&&i.place) bits.push(L.ordinal(i.place));
+      else if(win) bits.push("Winner");
+      else if(!i.out&&i.entries>1) bits.push("2nd entry");
+      if(i.kos) bits.push("<b>"+i.kos+"</b> KO");
+      var c=document.createElement("div"); c.className="pc"+(i.out?" out":"")+(win?" win":"");
+      c.innerHTML=L.avatar(p.name)+'<div class="nm">'+L.esc(p.name)+'</div><div class="sub">'+bits.join(" · ")+'</div>'+
+        (i.out?'<div class="stamp">OUT</div>':'')+(win?'<div class="crown">&#9819;</div>':'');
+      box.appendChild(c);
+    });
+  }
+
+  // ---- clock ----
+  var lastLevel=null;
+  function paintClock(){
+    var c=(state&&state.clock)||L.newClock(), v=L.clockAt(c,Date.now()), lv=L.LEVELS[v.i], nx=L.LEVELS[v.i+1];
+    if(lastLevel!==null&&v.i>lastLevel) beep();
+    lastLevel=v.i;
+    $("lvl").textContent="Level "+(v.i+1);
+    $("paused").classList.toggle("on",!v.running&&!v.final&&v.remaining<lv.mins*60);
+    var t=$("time");
+    if(v.final){ t.textContent="Final level"; t.className="time final"; }
+    else { t.textContent=L.fmtClock(v.remaining); t.className="time"+(v.running?"":" paused"); }
+    $("blinds").textContent=lv.big+" / "+lv.small;
+    $("next").innerHTML=nx?'<span class="lab">Next</span><span>'+nx.big+" / "+nx.small+'</span><span class="dur">'+(nx.mins!=null?nx.mins+" min":"to the finish")+'</span>':"";
+    $("note").textContent=lv.note;
+  }
+  setInterval(paintClock,250);
+
+  // ---- sound ----
+  var ac=null;
+  function primeAudio(){ try{ ac=ac||new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==="suspended")ac.resume(); }catch(e){} }
+  function beep(){
+    if(!ac) return;
+    try{
+      [0,0.18,0.36].forEach(function(t){
+        var o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);
+        o.type="sine";o.frequency.value=880;
+        g.gain.setValueAtTime(0.0001,ac.currentTime+t);
+        g.gain.exponentialRampToValueAtTime(0.3,ac.currentTime+t+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+t+0.14);
+        o.start(ac.currentTime+t);o.stop(ac.currentTime+t+0.16);
+      });
+    }catch(e){}
+  }
+
+  // ---- fullscreen and wake lock ----
+  var fsBtn=$("fsBtn"), root=document.documentElement;
+  if(!root.requestFullscreen) fsBtn.style.display="none";
+  fsBtn.addEventListener("click",function(){ root.requestFullscreen().catch(function(){}); });
+  var lock=null;
+  function keepAwake(){
+    if(!("wakeLock" in navigator)||document.hidden||lock) return;
+    navigator.wakeLock.request("screen").then(function(l){
+      lock=l; awake=true; paintConn();
+      l.addEventListener("release",function(){ lock=null; awake=false; paintConn(); });
+    },function(){});
+  }
+  document.addEventListener("visibilitychange",keepAwake);
+  // Browsers only allow sound (and sometimes the wake lock) after a tap, so any click turns both on.
+  document.addEventListener("click",function(){ primeAudio(); keepAwake(); paintConn(); });
+  keepAwake();
+
+  // ---- controls on this screen: for a night with no internet, or no phone handy ----
+  var panel=$("ctlPanel"), frame=null;
+  $("ctlBtn").addEventListener("click",function(){
+    if(!frame){
+      frame=document.createElement("iframe"); frame.title="Controls";
+      frame.src="remote.html?room="+encodeURIComponent(room);
+      panel.appendChild(frame);
+    }
+    panel.classList.add("on");
+  });
+  $("ctlClose").addEventListener("click",function(){ panel.classList.remove("on"); });
+
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});
+  render(); paintConn();
+})();
+</script>
+</body>
+</html>

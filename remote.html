@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#163A32">
+<title>Poker Night Remote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+.wrap{max-width:520px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(40px + env(safe-area-inset-bottom,0px))}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.head .lg{font-family:Fraunces,Georgia,serif;font-size:24px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{flex:none;font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 11px;white-space:nowrap}
+.pill .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--rose);margin-right:6px;vertical-align:1px}
+.pill.on .dot{background:var(--brass)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.h{font-family:Fraunces,Georgia,serif;font-size:19px;margin:0 0 12px;font-weight:500}
+
+.clock{text-align:center}
+.clock .lvl{font-family:Fraunces,Georgia,serif;color:var(--muted);font-size:15px}
+.clock .bl{font-family:Fraunces,Georgia,serif;font-size:26px;color:var(--brass);margin-top:2px}
+.clock .time{font-size:64px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1;margin:10px 0 4px}
+.clock .time.paused{color:var(--muted)}
+.clock .time.final{font-family:Fraunces,Georgia,serif;font-weight:500;color:var(--brass);font-size:36px}
+.clock .note{font-size:13px;color:var(--muted)}
+.clock .nx{font-size:13px;color:var(--muted);margin-top:2px} .clock .nx b{color:var(--cream);font-weight:600}
+.ctl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.ctl .btn{min-height:52px;font-size:16px;white-space:nowrap;padding:9px 6px}
+.ctl .main{grid-column:1/-1;min-height:60px;font-size:19px}
+.adj{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.adj .btn{min-height:44px;font-size:15px}
+
+.join-card{text-align:center;padding:28px 18px}
+.join-card p{color:var(--muted);margin:0 0 18px}
+.foot{display:flex;justify-content:center;gap:18px;margin-top:22px;font-size:13.5px}
+.foot a,.foot button{color:var(--muted);background:none;border:0;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);display:flex;align-items:center;gap:12px;
+  background:var(--brass);color:#1a1205;font-weight:600;font-size:14px;padding:10px 16px;border-radius:10px;
+  box-shadow:0 10px 30px -8px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast-undo{font:inherit;font-weight:600;color:#1a1205;background:transparent;border:1px solid rgba(26,18,5,.4);border-radius:8px;padding:4px 10px;cursor:pointer}
+
+.night-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.night-h .left{color:var(--muted);font-size:13px;white-space:nowrap}
+.lab{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{font:inherit;font-size:14px;color:var(--cream);background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;min-width:40px}
+.chip.on{background:var(--brass);color:#1a1205;border-color:var(--brass);font-weight:600}
+.chip.guest{background:rgba(203,168,106,.18);color:var(--cream);border-color:var(--brass-dim)}
+.chip.add{border-style:dashed;color:var(--muted)}
+.past{list-style:none;margin:0;padding:0}
+.past li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line-soft);font-size:14px;color:var(--muted)}
+.past li:first-child{border-top:0}
+.past .btn{flex:none;padding:7px 14px;font-size:14px}
+.warn{font-size:13px;color:var(--rose);margin:-6px 0 14px}
+.done{background:rgba(203,168,106,.1);border:1px solid var(--brass-dim);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:14.5px}
+.done .crown{color:var(--brass)}
+.plist{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pl{display:flex;gap:10px;align-items:center;background:var(--raise);border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+.pl .avatar{width:42px;height:42px;border-radius:8px;font-size:20px;flex:none}
+.pl .pn{min-width:0}
+.pl .nm{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl .st{font-size:12.5px;color:var(--muted)}
+.pl.out{opacity:.5} .pl.out .avatar{filter:grayscale(1)}
+.pl.win{border-color:var(--brass-dim);background:rgba(203,168,106,.1)} .pl.win .st{color:var(--brass)}
+.night-acts{display:grid;gap:8px;margin-top:14px}
+.night-acts .bust{min-height:58px;font-size:18px}
+.hist{list-style:none;padding:0;margin:14px 0 0;font-size:13.5px;color:var(--muted)}
+.hist li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0;border-top:1px solid var(--line-soft)} .hist b{color:var(--cream);font-weight:500}
+.hist-lab{margin-top:16px}
+.hist-txt{flex:1;min-width:0;text-align:left;font:inherit;font-size:13.5px;color:var(--muted);background:none;border:0;padding:6px 0;cursor:pointer}
+.hist-del{flex:none;font:inherit;font-size:14px;color:var(--muted);background:none;border:1px solid var(--line);border-radius:8px;width:34px;height:34px;cursor:pointer}
+.hist-del:active{color:var(--rose);border-color:var(--rose)}
+.left-btn{width:100%;margin-top:10px;min-height:46px}
+
+.hint{color:var(--muted);font-size:13px;margin:-6px 0 12px}
+.names{display:grid;gap:8px}
+.name-row{display:flex;align-items:center;gap:10px}
+.name-row .avatar{width:42px;height:42px;border-radius:8px;font-size:20px;flex:none}
+.name-in{flex:1;min-width:0;font:inherit;font-size:16px;color:var(--cream);background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.name-in:focus{outline:none;border-color:var(--brass-dim)}
+
+.sheet-bg{position:fixed;inset:0;background:rgba(4,12,10,.65);display:flex;align-items:flex-end;justify-content:center;z-index:40}
+.sheet{width:100%;max-width:520px;max-height:88vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;padding:20px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet .sub{color:var(--muted);font-size:14px;margin:-4px 0 16px}
+.pick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pick button{font:inherit;font-size:14px;font-weight:600;color:var(--cream);background:var(--raise);border:1px solid var(--line);border-radius:12px;padding:10px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0}
+.pick button span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pick button:active{border-color:var(--brass)}
+.pick .avatar{width:68px;height:68px;border-radius:12px;font-size:30px}
+.stack-btns{display:grid;gap:8px} .stack-btns .btn{min-height:54px;font-size:16px}
+.sheet .row{display:flex;gap:8px;margin-top:16px} .sheet .row .btn{flex:1;min-height:46px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="league.js"></script>
+<script src="sync.js"></script>
+<script>
+(function(){
+  "use strict";
+  var L=League, ROOM_KEY="pokerLeague.remoteRoom", LIVE_KEY="pokerLeague.live.v1";
+  function get(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
+  function set(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+  function $(id){ return document.getElementById(id); }
+  function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
+
+  var params=new URLSearchParams(location.search);
+  var room=(params.get("room")||get(ROOM_KEY)||"").toUpperCase();
+  if(params.get("room")){ set(ROOM_KEY,room); history.replaceState(null,"",location.pathname); }
+  var DEVICE=get("pokerLeague.device"); if(!DEVICE){ DEVICE=L.newId(); set("pokerLeague.device",DEVICE); }
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});
+
+  // ---- data: this phone's copy is the real one ----
+  var state=null, sync=null, conn="offline", seed={};
+  function seedFromIndex(){
+    return fetch("index.html").then(function(r){return r.text();}).then(function(html){
+      var m=html.match(/<script type="application\/json" id="seed">([\s\S]*?)<\/script>/);
+      return m?JSON.parse(m[1]):{};
+    }).catch(function(){ return {}; });
+  }
+  function loadState(seed){
+    var lg=null, live=null;
+    try{ lg=JSON.parse(get(L.LS_KEY)); }catch(e){}
+    try{ live=JSON.parse(get(LIVE_KEY)); }catch(e){}
+    live=live||{};
+    var league=L.normalize(lg||seed,seed);
+    var s=fromParts(live.updatedAt||0,league,live);
+    // The standings page on this phone edits the league directly; count that as a fresh change.
+    if(lg && live.leagueJson && live.leagueJson!==JSON.stringify(league)) s.updatedAt=Date.now();
+    // "Reset to published" there removed the league after this phone had synced: a deliberate fresh start,
+    // so it must beat the older copies on the TV and other phones instead of being overwritten by them.
+    if(!lg && live.updatedAt){ s.clock=L.newClock(); s.clockAt=0; s.night=L.newNight(league); s.past=[]; s.epoch=L.newId(); s.updatedAt=Date.now(); }
+    return s;
+  }
+  function fromParts(updatedAt,league,p){
+    return {updatedAt:updatedAt, epoch:p.epoch||"e0", league:league, clock:p.clock||L.newClock(), clockAt:p.clockAt||0,
+      night:L.fixNight(p.night,league), past:(p.past||[]).map(function(n){ return L.fixNight(n,league); })};
+  }
+  function save(){
+    var lj=JSON.stringify(state.league);
+    set(L.LS_KEY,lj);
+    set(LIVE_KEY,JSON.stringify({updatedAt:state.updatedAt,epoch:state.epoch,clock:state.clock,clockAt:state.clockAt,night:state.night,past:state.past,leagueJson:lj}));
+  }
+  function commit(fn){
+    var clockBefore=JSON.stringify(state.clock);
+    fn(sync.now());
+    if(JSON.stringify(state.clock)!==clockBefore) state.clockAt=sync.now();
+    state.updatedAt=sync.now();
+    save(); sync.send(state); render();
+    return true;
+  }
+  function receive(s){
+    if(!s||!s.league||(s.updatedAt||0)<=(state.updatedAt||0)) return;
+    var mine=state;
+    state=fromParts(s.updatedAt,L.normalize(s.league,state.league),s);
+    // If this phone had something the newer copy lacks, keep it and send the combined copy back.
+    if(mergeFrom(mine)){ state.updatedAt=sync.now(); save(); sync.send(state); }
+    else save();
+    render();
+  }
+  // Two phones can record at the same moment, or one while it was locked or offline. Whole copies replace
+  // each other, so when a newer copy arrives, keep what only this phone has: busts and removals on the
+  // same night, a more recent clock change, and any night (with busts) the other copy never saw.
+  function mergeFrom(mine){
+    // A "Reset to published" starts a new epoch; nothing from before it is carried over.
+    if(mine.epoch!==state.epoch) return false;
+    var changed=false;
+    if((mine.clockAt||0)>(state.clockAt||0)){ state.clock=mine.clock; state.clockAt=mine.clockAt; changed=true; }
+    var theirs={};
+    nightsOf(state).forEach(function(n){ theirs[n.id]=n; });
+    nightsOf(mine).forEach(function(m){
+      var n=theirs[m.id];
+      if(!n){
+        if(!m.busts.length) return;
+        var copy=JSON.parse(JSON.stringify(m)); copy.applied={kos:{},placed:false};
+        state.past.unshift(copy); applyNight(copy); changed=true; return;
+      }
+      var removed=n.removed.slice();
+      m.removed.forEach(function(id){ if(removed.indexOf(id)<0) removed.push(id); });
+      var have={}; n.busts.forEach(function(b){ have[b.id]=1; });
+      var extra=m.busts.filter(function(b){ return !have[b.id]&&removed.indexOf(b.id)<0; });
+      if(!extra.length&&removed.length===n.removed.length) return;
+      n.removed=removed;
+      extra.forEach(function(b){ [b.v,b.k].forEach(function(pid){
+        if(!pid||n.playing.indexOf(pid)>=0) return;
+        n.playing.push(pid);
+        var g=m.guests.filter(function(x){ return x.id===pid; })[0];
+        if(g&&!n.guests.some(function(x){ return x.id===pid; })) n.guests.push(g);
+      }); });
+      var all=n.busts.filter(function(b){ return removed.indexOf(b.id)<0; }).concat(extra);
+      all.sort(function(a,b){ return a.at-b.at; });
+      n.busts=L.cleanBusts(n,all);
+      applyNight(n); changed=true;
+    });
+    return changed;
+  }
+  function nightsOf(s){ return [s.night].concat(s.past); }
+  // Pick up changes made in another tab on this phone: a second remote tab (LIVE_KEY is written last,
+  // so both keys are settled by then), or the standings page (checked when you come back to this tab).
+  function reloadFromStorage(){
+    if(!state) return;
+    var s=loadState(seed);
+    if(s.updatedAt>state.updatedAt){ state=s; save(); sync.send(state); render(); }
+  }
+  window.addEventListener("storage",function(e){ if(e.key===LIVE_KEY) reloadFromStorage(); });
+  document.addEventListener("visibilitychange",function(){ if(!document.hidden) reloadFromStorage(); });
+
+  // ---- screens ----
+  function render(){
+    var app=$("app"); app.innerHTML="";
+    if(!room){ app.appendChild(joinScreen()); return; }
+    var head=el("div","head");
+    head.appendChild(el("div","lg",L.esc(state.league.leagueName)));
+    var pill=el("div","pill"+(conn==="online"?" on":""),'<span class="dot"></span>'+connLabel());pill.id="pill";
+    head.appendChild(pill);
+    app.appendChild(head);
+    app.appendChild(clockCard());
+    app.appendChild(nightCard());
+    if(state.past.length) app.appendChild(pastCard());
+    app.appendChild(playersCard());
+    var foot=el("div","foot");
+    foot.appendChild(el("a",null,"Standings")).href="index.html";
+    var ch=el("button",null,"Change TV");ch.addEventListener("click",function(){ set(ROOM_KEY,""); location.reload(); });
+    foot.appendChild(ch);
+    app.appendChild(foot);
+    paintClock();
+  }
+  function connLabel(){
+    return {online:"Connected to TV",connecting:"Connecting…",waiting:"TV not found",offline:"Offline · will sync"}[conn]||conn;
+  }
+  function paintConn(){
+    var p=$("pill"); if(!p) return;
+    p.className="pill"+(conn==="online"?" on":""); p.innerHTML='<span class="dot"></span>'+connLabel();
+  }
+  function joinScreen(){
+    var c=el("div","card join-card");
+    c.appendChild(el("h1","h","Connect to the TV"));
+    c.appendChild(el("p",null,"Open your phone’s camera and scan the QR code on the TV."));
+    return c;
+  }
+
+  // ---- tonight: busts produce the finishing order and KOs ----
+  function nameOf(pid,n){ return L.playerName(state.league,n||state.night,pid); }
+  // Hebrew names inside English sentences: isolate them so punctuation stays where it belongs.
+  function iso(pid,n){ return "⁨"+nameOf(pid,n)+"⁩"; }
+  function isMember(pid){ return state.league.players.some(function(p){ return p.id===pid; }); }
+  function placesOf(pid){ var a=state.league.places[pid]; if(!a){ a=[null,null,null,null,null]; state.league.places[pid]=a; } return a; }
+  // Writes a night into the season: KOs as they happen, places once one player is left. Guests get
+  // neither. `applied` remembers what was already written, so undo, fixes and repeat calls stay correct.
+  function applyNight(n){
+    n=n||state.night;
+    var lg=state.league, v=L.nightView(n), r=n.round-1, kos={};
+    var members=n.playing.filter(isMember);
+    members.forEach(function(pid){ if(v.info[pid].kos) kos[pid]=v.info[pid].kos; });
+    var prev=n.applied.kos||{}, ids={};
+    Object.keys(kos).concat(Object.keys(prev)).forEach(function(pid){ ids[pid]=1; });
+    Object.keys(ids).forEach(function(pid){ lg.kos[pid]=Math.max(0,(lg.kos[pid]||0)+(kos[pid]||0)-(prev[pid]||0)); });
+    n.applied.kos=kos;
+    if(v.done){ members.forEach(function(pid){ placesOf(pid)[r]=v.info[pid].place; }); n.applied.placed=true; }
+    else if(n.applied.placed){ members.forEach(function(pid){ placesOf(pid)[r]=null; }); n.applied.placed=false; }
+  }
+  function statusText(i,isWinner){
+    var s;
+    if(i.guest) s=isWinner?"Guest · winner":(i.out?"Guest · out":"Guest");
+    else s=i.out?"Out · "+L.ordinal(i.place):(isWinner?"Winner":(i.entries>1?"2nd entry":"Playing"));
+    return s+(i.kos?" · "+i.kos+" KO":"");
+  }
+  function nightCard(){
+    var n=state.night, v=L.nightView(n), started=n.busts.length>0;
+    var c=el("div","card"); c.id="tonight";
+    var hd=el("div","night-h");
+    hd.appendChild(el("h2","h","Tonight · Round "+n.round+" of "+L.ROUNDS));
+    if(!v.done) hd.appendChild(el("span","left",v.alive.length+" of "+n.playing.length+" left"));
+    c.appendChild(hd);
+    c.appendChild(setupBox(started));
+    if(v.done){
+      var note=v.info[v.winner].guest?" Guests don’t score, so the best league finisher gets 1st.":" Places and KOs are in the standings.";
+      c.appendChild(el("div","done",'<span class="crown">&#9819;</span> <b>'+L.esc(iso(v.winner))+'</b> wins the night.'+note));
+    }
+    var grid=el("div","plist");
+    n.playing.forEach(function(pid){
+      var i=v.info[pid], win=v.winner===pid;
+      grid.appendChild(el("div","pl"+(i.out?" out":"")+(win?" win":""),
+        L.avatar(nameOf(pid))+'<div class="pn"><div class="nm">'+L.esc(iso(pid))+'</div><div class="st">'+statusText(i,win)+'</div></div>'));
+    });
+    c.appendChild(grid);
+    var acts=el("div","night-acts");
+    if(!v.done){
+      var b=el("button","btn bust","Record a bust"); b.disabled=v.alive.length<2;
+      b.addEventListener("click",function(){ showSheet({step:"victim"}); }); acts.appendChild(b);
+    } else {
+      var nb=el("button","btn","Start the next night");
+      nb.addEventListener("click",function(){
+        if(!confirm("Start a new night? Tonight’s results stay in the standings, and you can reopen it under Past nights.")) return;
+        commit(function(){ archiveNight(); state.night=L.newNight(state.league); });
+      });
+      acts.appendChild(nb);
+    }
+    if(started){ var u=el("button","btn ghost","Undo last bust"); u.addEventListener("click",undoBust); acts.appendChild(u); }
+    c.appendChild(acts);
+    if(started){
+      c.appendChild(el("div","lab hist-lab","Tonight’s busts · tap one to change who knocked them out, ✕ to remove it"));
+      var ul=el("ul","hist");
+      n.busts.map(function(b,idx){ return {b:b,idx:idx}; }).reverse().forEach(function(x){
+        var li=el("li");
+        var txt=el("button","hist-txt",bustText(x.b)+" · L"+(x.b.lvl+1));
+        txt.addEventListener("click",function(){ showSheet({step:"fix",idx:x.idx,v:x.b.v}); });
+        li.appendChild(txt);
+        var del=el("button","hist-del","✕"); del.setAttribute("aria-label","Remove this bust");
+        del.addEventListener("click",function(){ removeBust(x.idx); });
+        li.appendChild(del); ul.appendChild(li);
+      });
+      c.appendChild(ul);
+    }
+    return c;
+  }
+  function bustText(b){
+    var who=b.k?"<b>"+L.esc(iso(b.k))+"</b> busted <b>"+L.esc(iso(b.v))+"</b>":"<b>"+L.esc(iso(b.v))+"</b> left the game";
+    return who+" · "+(b.re?"re-entered":"out");
+  }
+  function plainBust(b){ return b.k?iso(b.k)+" busted "+iso(b.v):iso(b.v)+" left the game"; }
+  // Only nights where something happened are worth keeping.
+  function archiveNight(){
+    if(state.night.busts.length) state.past.unshift(state.night);
+    state.past=state.past.slice(0,20);
+  }
+  // Round can change any time; a finished night's places move to the new round.
+  function setRound(r){
+    commit(function(){
+      var n=state.night;
+      if(n.applied.placed) n.playing.filter(isMember).forEach(function(pid){ placesOf(pid)[n.round-1]=null; });
+      n.applied.placed=false; n.round=r; applyNight();
+    });
+  }
+  function setupBox(started){
+    var n=state.night, lg=state.league, box=el("div","setup");
+    box.appendChild(el("div","lab","Round"));
+    var rc=el("div","chips");
+    for(var r=1;r<=L.ROUNDS;r++)(function(r){
+      var b=el("button","chip"+(n.round===r?" on":""),String(r));
+      b.addEventListener("click",function(){ if(n.round!==r) setRound(r); });
+      rc.appendChild(b);
+    })(r);
+    box.appendChild(rc);
+    var filled=!n.applied.placed&&lg.players.some(function(p){ return (lg.places[p.id]||[])[n.round-1]; });
+    if(filled) box.appendChild(el("div","warn","Round "+n.round+" already has results. Tonight’s finish will replace them."));
+    box.appendChild(el("div","lab",started?"Playing tonight · late arrival? Tap their name":"Playing tonight"));
+    var pc=el("div","chips"), done=L.nightView(n).done;
+    function involved(pid){ return n.busts.some(function(x){ return x.v===pid||x.k===pid; }); }
+    function blocked(on,pid,name){
+      if(done){ toast("Tonight is finished. Undo the last bust to change who played."); return true; }
+      if(on&&involved(pid)){ toast(name+" is in tonight’s busts. Remove those first."); return true; }
+      if(on&&n.playing.length<=2){ toast("At least two players"); return true; }
+      return false;
+    }
+    lg.players.forEach(function(p){
+      var on=n.playing.indexOf(p.id)>=0, b=el("button","chip"+(on?" on":""),L.esc(p.name));
+      b.addEventListener("click",function(){
+        if(blocked(on,p.id,p.name)) return;
+        commit(function(){
+          var set=state.night.playing; if(on) set.splice(set.indexOf(p.id),1); else set.push(p.id);
+          // League players in league order, then guests in the order they joined.
+          state.night.playing=lg.players.map(function(x){return x.id;}).filter(function(id){ return set.indexOf(id)>=0; })
+            .concat(set.filter(function(id){ return !isMember(id); }));
+        });
+      });
+      pc.appendChild(b);
+    });
+    n.guests.forEach(function(g){
+      var b=el("button","chip on guest",L.esc(g.name)+" · guest");
+      b.addEventListener("click",function(){
+        if(blocked(true,g.id,g.name)) return;
+        if(!confirm("Remove guest "+g.name+" from tonight?")) return;
+        commit(function(){
+          state.night.playing=state.night.playing.filter(function(id){ return id!==g.id; });
+          state.night.guests=state.night.guests.filter(function(x){ return x.id!==g.id; });
+        });
+      });
+      pc.appendChild(b);
+    });
+    var add=el("button","chip add","+ Guest");
+    add.addEventListener("click",function(){
+      if(done){ toast("Tonight is finished. Undo the last bust to change who played."); return; }
+      var name=(prompt("Guest’s name (guests play but don’t score in the league):")||"").trim().slice(0,24);
+      if(!name) return;
+      if(lg.players.some(function(p){ return p.name===name; })){ toast(name+" is already a league player"); return; }
+      commit(function(){
+        var id="g"+L.newId();
+        state.night.guests.push({id:id,name:name}); state.night.playing.push(id);
+      });
+      toast(name+" joins as a guest");
+    });
+    pc.appendChild(add);
+    box.appendChild(pc);
+    return box;
+  }
+
+  // Past nights: reopen one to fix a mistake; its busts recalculate that round's places and KOs.
+  function pastCard(){
+    var c=el("div","card");
+    c.appendChild(el("h2","h","Past nights"));
+    c.appendChild(el("p","hint","Found a mistake in an earlier night? Open it, fix its busts, then tap Start the next night again."));
+    var ul=el("ul","past");
+    state.past.forEach(function(n,i){
+      var v=L.nightView(n);
+      var li=el("li",null,'<span>Round '+n.round+' · '+(v.done?L.esc(iso(v.winner,n))+' won':'not finished')+' · '+n.busts.length+' busts</span>');
+      var b=el("button","btn ghost","Open");
+      b.addEventListener("click",function(){ reopen(i); });
+      li.appendChild(b); ul.appendChild(li);
+    });
+    c.appendChild(ul);
+    return c;
+  }
+  function reopen(i){
+    var n=state.past[i];
+    var also=state.night.busts.length?" Tonight moves to Past nights so you can come back to it.":"";
+    if(!confirm("Open round "+n.round+" to fix it?"+also)) return;
+    commit(function(){
+      state.past.splice(i,1);
+      archiveNight();
+      state.night=n;
+    });
+    var t=$("tonight"); if(t) t.scrollIntoView({behavior:"smooth"});
+    toast("Round "+n.round+" is open");
+  }
+
+  function playersCard(){
+    var c=el("div","card");
+    c.appendChild(el("h2","h","Players"));
+    c.appendChild(el("p","hint","Tap a name to change it. A photo shows when players/&lt;name&gt;.jpg exists."));
+    var list=el("div","names");
+    state.league.players.forEach(function(p){
+      var row=el("label","name-row",L.avatar(p.name));
+      var inp=el("input","name-in"); inp.type="text"; inp.value=p.name; inp.maxLength=24; inp.dir="auto"; inp.setAttribute("aria-label","Player name");
+      inp.addEventListener("change",function(){
+        var v=inp.value.trim();
+        if(!v){ inp.value=p.name; return; }
+        if(v===p.name) return;
+        if(commit(function(){ state.league.players.forEach(function(x){ if(x.id===p.id) x.name=v; }); })) toast("Renamed to "+v);
+      });
+      inp.addEventListener("keydown",function(e){ if(e.key==="Enter") inp.blur(); });
+      row.appendChild(inp); list.appendChild(row);
+    });
+    c.appendChild(list);
+    return c;
+  }
+
+  // Bust flow in a bottom sheet: who busted -> who knocked them out -> re-enter or out.
+  var sheet=null;
+  function closeSheet(){ if(sheet){ sheet.remove(); sheet=null; } }
+  function showSheet(st){
+    closeSheet(); $("toast").classList.remove("show");
+    var v=L.nightView(state.night);
+    var bg=el("div","sheet-bg"), sh=el("div","sheet");
+    bg.addEventListener("click",function(e){ if(e.target===bg) closeSheet(); });
+    var row=el("div","row");
+    if(st.step==="re"){
+      var re=el("button","btn","Re-enter with a fresh stack"); re.addEventListener("click",function(){ record(st.v,st.k,true,st.lvl); });
+      var out=el("button","btn ghost","Out for the night"); out.addEventListener("click",function(){ record(st.v,st.k,false,st.lvl); });
+      var col=el("div","stack-btns");
+      if(st.open){
+        sh.appendChild(el("h2","h",L.esc(iso(st.v))+" can re-enter"));
+        sh.appendChild(el("p","sub","Re-entry is open until the end of Level 3. Only the final bust sets a place."));
+        col.appendChild(re); col.appendChild(out);
+      } else {
+        // Re-entry closed by the clock, but the bust may have happened just before Level 4 started.
+        sh.appendChild(el("h2","h",L.esc(iso(st.v))+" is out"));
+        sh.appendChild(el("p","sub","Re-entry closed at the end of Level 3. Only re-enter if they busted before that."));
+        out.className="btn"; re.className="btn ghost"; re.textContent="Re-enter anyway";
+        col.appendChild(out); col.appendChild(re);
+      }
+      sh.appendChild(col);
+    } else if(st.step==="fix"){
+      // Changing the knockout in place keeps the bust where it was, so the finishing order stays right.
+      sh.appendChild(el("h2","h","Who knocked out "+L.esc(iso(st.v))+"?"));
+      sh.appendChild(el("p","sub","Changes this bust only. The order of busts stays the same."));
+      var fg=el("div","pick");
+      state.night.playing.filter(function(pid){ return pid!==st.v; }).forEach(function(pid){
+        var b=el("button",null,L.avatar(nameOf(pid))+'<span>'+L.esc(iso(pid))+'</span>');
+        b.addEventListener("click",function(){ fixKiller(st.idx,pid); });
+        fg.appendChild(b);
+      });
+      sh.appendChild(fg);
+      var nb=el("button","btn ghost left-btn","Nobody — they left the game");
+      nb.addEventListener("click",function(){ fixKiller(st.idx,null); });
+      sh.appendChild(nb);
+    } else {
+      var victim=st.step==="victim";
+      sh.appendChild(el("h2","h",victim?"Who busted?":"Who knocked out "+L.esc(iso(st.v))+"?"));
+      if(victim) sh.appendChild(el("p","sub","Two out on the same hand? Record the one who started the hand with fewer chips first."));
+      var grid=el("div","pick");
+      v.alive.filter(function(pid){ return victim||pid!==st.v; }).forEach(function(pid){
+        var b=el("button",null,L.avatar(nameOf(pid))+'<span>'+L.esc(iso(pid))+'</span>');
+        b.addEventListener("click",function(){ pick(st,pid); });
+        grid.appendChild(b);
+      });
+      sh.appendChild(grid);
+      if(!victim){
+        var left=el("button","btn ghost left-btn","Nobody — they left the game");
+        left.addEventListener("click",function(){ record(st.v,null,false,L.clockAt(state.clock,sync.now()).i); });
+        sh.appendChild(left);
+      }
+    }
+    if(st.step!=="victim"){ var back=el("button","btn ghost","Back"); back.addEventListener("click",function(){ showSheet(st.step==="re"?{step:"killer",v:st.v}:{step:"victim"}); }); row.appendChild(back); }
+    var cancel=el("button","btn ghost","Cancel"); cancel.addEventListener("click",closeSheet); row.appendChild(cancel);
+    sh.appendChild(row);
+    bg.appendChild(sh); document.body.appendChild(bg); sheet=bg;
+  }
+  function pick(st,pid){
+    if(st.step==="victim"){ showSheet({step:"killer",v:pid}); return; }
+    var lvl=L.clockAt(state.clock,sync.now()).i;
+    var hasEntry=L.nightView(state.night).info[st.v].entries<L.MAX_ENTRIES;
+    if(hasEntry) showSheet({step:"re",v:st.v,k:pid,lvl:lvl,open:L.canReenter(state.night,st.v,lvl)});
+    else record(st.v,pid,false,lvl);
+  }
+  function record(vid,kid,re,lvl){
+    closeSheet();
+    var before=L.nightView(state.night);
+    if(before.done||before.alive.indexOf(vid)<0||(kid&&before.alive.indexOf(kid)<0)){ render(); toast("Someone already recorded that"); return; }
+    commit(function(now){ state.night.busts.push({id:L.newId(),at:now,by:DEVICE,v:vid,k:kid,re:re,lvl:lvl}); applyNight(); });
+    var v=L.nightView(state.night), nm=iso(vid), place=v.info[vid].place;
+    var msg=re?nm+" re-enters":(v.done?iso(v.winner)+" wins the night!":nm+" is out"+(place?" in "+L.ordinal(place):""));
+    var count=state.night.busts.length;
+    toast(msg,function(){ if(state.night.busts.length===count) undoBust(true); });
+  }
+  function undoBust(sure){
+    if(!state.night.busts.length) return;
+    var b=state.night.busts[state.night.busts.length-1];
+    if(sure!==true&&!confirm("Undo “"+plainBust(b)+"”?")) return;
+    commit(function(){ state.night.removed.push(b.id); state.night.busts.pop(); applyNight(); });
+    toast("Bust undone");
+  }
+  function fixKiller(idx,kid){
+    closeSheet();
+    var n=state.night, b=n.busts[idx]; if(!b) return;
+    var trial=n.busts.map(function(x,i){ return i===idx?Object.assign({},x,{k:kid}):x; });
+    if(L.cleanBusts(n,trial).length!==trial.length){ toast(nameOf(kid)+" was already out by then"); return; }
+    commit(function(){ b.k=kid; applyNight(); });
+    toast("Bust updated");
+  }
+  // Removing any bust keeps the rest valid: it can only bring a player back in, never take one out.
+  function removeBust(idx){
+    var b=state.night.busts[idx]; if(!b) return;
+    if(!confirm("Remove “"+plainBust(b)+"” from tonight?")) return;
+    commit(function(){ state.night.removed.push(b.id); state.night.busts.splice(idx,1); applyNight(); });
+    toast("Bust removed");
+  }
+
+  // ---- clock ----
+  var refs={};
+  function clockCard(){
+    var c=el("div","card clock");
+    refs.lvl=c.appendChild(el("div","lvl"));
+    refs.bl=c.appendChild(el("div","bl"));
+    refs.time=c.appendChild(el("div","time"));
+    refs.note=c.appendChild(el("div","note"));
+    refs.nx=c.appendChild(el("div","nx"));
+    var ctl=el("div","ctl");
+    refs.main=el("button","btn main");
+    refs.main.addEventListener("click",function(){
+      var v=L.clockAt(state.clock,sync.now());
+      commit(function(now){ state.clock=v.running?L.clockPause(state.clock,now):L.clockStart(state.clock,now); });
+    });
+    var prev=el("button","btn ghost prev","‹ Back");
+    prev.addEventListener("click",function(){ step(-1); });
+    refs.reset=el("button","btn ghost","Reset");
+    refs.reset.addEventListener("click",function(){
+      if(!confirm("Restart this level’s timer from the top?")) return;
+      commit(function(now){ state.clock=L.clockReset(state.clock,now); });
+    });
+    refs.skip=el("button","btn ghost","Skip ›");
+    refs.skip.addEventListener("click",function(){ step(1); });
+    ctl.appendChild(refs.main);ctl.appendChild(prev);ctl.appendChild(refs.reset);ctl.appendChild(refs.skip);
+    c.appendChild(ctl);
+    var adj=el("div","adj"); refs.adj=[];
+    [[-60,"− 1 min"],[60,"+ 1 min"]].forEach(function(a){
+      var b=el("button","btn ghost",a[1]);
+      b.addEventListener("click",function(){ commit(function(now){ state.clock=L.clockAdjust(state.clock,now,a[0]); }); });
+      adj.appendChild(b); refs.adj.push(b);
+    });
+    c.appendChild(adj);
+    return c;
+  }
+  function step(d){
+    var v=L.clockAt(state.clock,sync.now());
+    if(!commit(function(now){ state.clock=L.clockSetLevel(state.clock,now,v.i+d); })) return;
+    var i=L.clockAt(state.clock,sync.now()).i, lv=L.LEVELS[i];
+    toast("Level "+(i+1)+" · "+lv.big+" / "+lv.small);
+  }
+  function paintClock(){
+    if(!refs.time||!state) return;
+    var v=L.clockAt(state.clock,sync.now()), lv=L.LEVELS[v.i], nx=L.LEVELS[v.i+1];
+    refs.lvl.textContent="Level "+(v.i+1);
+    refs.bl.textContent=lv.big+" / "+lv.small;
+    if(v.final){ refs.time.textContent="Final level"; refs.time.className="time final"; }
+    else { refs.time.textContent=L.fmtClock(v.remaining); refs.time.className="time"+(v.running?"":" paused"); }
+    refs.note.textContent=lv.note;
+    refs.nx.innerHTML=nx?'Next <b>'+nx.big+" / "+nx.small+'</b>':"";
+    refs.main.disabled=v.final; refs.reset.disabled=v.final; refs.skip.disabled=v.final;
+    refs.adj.forEach(function(b){ b.disabled=v.final; });
+    refs.main.textContent=v.running?"Pause":(!v.final&&v.remaining<lv.mins*60?"Resume":"Start");
+  }
+  setInterval(paintClock,250);
+
+  var toastTimer;
+  function toast(msg,undo){
+    var t=$("toast"); t.innerHTML=""; t.appendChild(el("span")).textContent=msg;
+    if(undo){ var b=el("button","toast-undo","Undo"); b.addEventListener("click",function(){ t.classList.remove("show"); undo(); }); t.appendChild(b); }
+    t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove("show");},undo?5000:2200);
+  }
+
+  // ---- start ----
+  if(!room){ render(); return; }
+  seedFromIndex().then(function(s){
+    seed=s; state=loadState(seed); save();
+    sync=Sync.join(room,{
+      getState:function(){ return state; },
+      onState:receive,
+      onStatus:function(s){ conn=s; paintConn(); }
+    });
+    render();
+  });
+})();
+</script>
+</body>
+</html>
