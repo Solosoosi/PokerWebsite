@@ -24,6 +24,10 @@ body{overflow:hidden;font-size:16px}
 .conn .dot{display:inline-block;width:1rem;height:1rem;border-radius:50%;background:var(--rose);margin-right:.7rem;vertical-align:middle}
 .conn.on .dot{background:var(--brass)}
 .top-btn{flex:none;font-size:1.9rem;padding:.9rem 1.4rem}
+/* Buttons, status and pointer fade out while nobody touches the TV, unless something needs doing. */
+.top-right{transition:opacity .6s}
+body.idle:not(.alert) .top-right{opacity:0;pointer-events:none}
+body.idle{cursor:none}
 :fullscreen .fs{display:none}
 .ctl-panel{position:fixed;top:0;right:0;bottom:0;width:min(440px,94vw);z-index:20;display:none;flex-direction:column;
   background:var(--bg2);border-left:1px solid var(--line);box-shadow:-12px 0 30px rgba(0,0,0,.45)}
@@ -39,7 +43,7 @@ body{overflow:hidden;font-size:16px}
 .top{text-shadow:0 .2rem 1rem rgba(0,0,0,.7)}
 
 /* Background: the group's photos, GTA loading-screen style. Each one fades in and drifts slowly
-   (moved by JS), punched up and printed with halftone dots under a dark green tint so the clock stays readable. */
+   (moved by JS), colours punched up, under a dark green tint so the clock stays readable. */
 .tv{position:relative}
 .bg{position:fixed;inset:0;overflow:hidden;background:linear-gradient(180deg,var(--bg1),var(--bg2))}
 .bg-img{position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease}
@@ -48,7 +52,6 @@ body{overflow:hidden;font-size:16px}
 .bg-img img.panel{transform-origin:50% 50%;box-shadow:0 0 8rem rgba(0,0,0,.75)}
 .bg-img canvas{position:absolute;inset:0;width:100%;height:100%;filter:saturate(1.5) brightness(.75)}
 .bg-tone{position:absolute;inset:0;background:
-  radial-gradient(circle,rgba(0,0,0,.3) 1px,transparent 1.6px) 0 0/4px 4px,
   radial-gradient(ellipse at 50% 45%,transparent 35%,rgba(4,12,10,.6) 100%),
   linear-gradient(180deg,rgba(15,38,32,.25),rgba(15,38,32,.45) 45%,rgba(15,38,32,.75))}
 .lvl{font-size:4rem;color:var(--muted)}
@@ -184,7 +187,15 @@ body{overflow:hidden;font-size:16px}
     if(!ac) t+=" · tap the screen to turn on sound";
     $("connText").textContent=t;
     $("conn").classList.toggle("on",conn.status==="ready"&&conn.phones>0);
+    document.body.classList.toggle("alert",conn.status!=="ready"||!ac);
   }
+  var idleTimer=null;
+  function wake(){
+    document.body.classList.remove("idle"); clearTimeout(idleTimer);
+    idleTimer=setTimeout(function(){ document.body.classList.add("idle"); },4000);
+  }
+  ["mousemove","mousedown","touchstart","keydown"].forEach(function(t){ document.addEventListener(t,wake,{passive:true}); });
+  wake();
 
   // ---- render ----
   function render(){
@@ -276,8 +287,8 @@ body{overflow:hidden;font-size:16px}
 
   // ---- background slideshow ----
   // backgrounds/list.json names the photos in backgrounds/. They play in a shuffled loop, each drifting
-  // with a slow zoom. A photo close to the screen's shape fills it; one much taller (or wider) is shown
-  // whole at full height, so it isn't blown up and cropped, over a blurred copy of itself.
+  // with a slow zoom. A photo almost the screen's shape fills it; any other is shown whole, a bit
+  // smaller than the screen so it isn't blown up or cropped, over a blurred copy of itself.
   var SLIDE_MS=9000, FADE_MS=1600;
   var bgLayers=document.querySelectorAll(".bg-img"), bgList=[], bgAt=0, bgFront=0, bgTimer=null, bgFails=0;
   var still=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -300,21 +311,24 @@ body{overflow:hidden;font-size:16px}
     var layer=bgLayers[bgFront], W=innerWidth, H=innerHeight, A=W/H, a=img.naturalWidth/img.naturalHeight, r=Math.random;
     var w, h, from, to, zoomIn=r()<.5;
     layer.innerHTML="";
-    if(a/A>.75&&a/A<1.33){
-      var tall=a<A; w=tall?W*1.06:H*1.06*a; h=tall?w/a:H*1.06;
+    if(a/A>.9&&a/A<1.11){
+      var tall=a<A; w=tall?W*1.04:H*1.04*a; h=tall?w/a:H*1.04;
       // Any position between (W-w, H-h) and (0, 0) keeps the screen covered, and zooming in from the top-left corner never opens a gap.
       var dx=W-w, dy=H-h;
       from=[dx*r(),dy*r()]; to=[dx-from[0],dy-from[1]];
     } else {
       layer.appendChild(blurCopy(img,A));
       img.className="panel";
-      if(a<A){ h=H; w=H*a; var x=(W-w)*(.15+.7*r()); from=[x,0]; to=[x+(r()<.5?-1:1)*W*.04,0]; }
-      else { w=W; h=W/a; var y=(H-h)*(.15+.7*r()); from=[0,y]; to=[0,y+(r()<.5?-1:1)*H*.04]; }
+      // Three quarters of the screen's height (or width), never more than the photo's own size.
+      var k=Math.min(1,a<A?H*.75/img.naturalHeight:W*.75/img.naturalWidth);
+      w=img.naturalWidth*k; h=img.naturalHeight*k;
+      var x=(W-w)*(.15+.7*r()), y=(H-h)*.45, d=(r()<.5?-1:1);
+      from=[x,y]; to=a<A?[x+d*W*.03,y]:[x,y+d*H*.03];
     }
     img.style.width=w+"px"; img.style.height=h+"px";
     var move=function(p,s){ return "translate("+p[0]+"px,"+p[1]+"px) scale("+s+")"; };
     layer.appendChild(img);
-    if(!still&&img.animate) img.animate([{transform:move(from,zoomIn?1:1.05)},{transform:move(to,zoomIn?1.05:1)}],
+    if(!still&&img.animate) img.animate([{transform:move(from,zoomIn?1:1.03)},{transform:move(to,zoomIn?1.03:1)}],
       {duration:SLIDE_MS+FADE_MS*2,easing:"ease-in-out",fill:"forwards"});
     else img.style.transform=move(from,1);
     layer.classList.add("on"); bgLayers[1-bgFront].classList.remove("on");
