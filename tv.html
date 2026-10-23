@@ -45,6 +45,8 @@ body{overflow:hidden;font-size:16px}
 .bg-img{position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease}
 .bg-img.on{opacity:1}
 .bg-img img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;filter:saturate(1.7) contrast(1.3) brightness(1.05);will-change:transform}
+.bg-img img.panel{transform-origin:50% 50%;box-shadow:0 0 8rem rgba(0,0,0,.75)}
+.bg-img canvas{position:absolute;inset:0;width:100%;height:100%;filter:saturate(1.5) brightness(.75)}
 .bg-tone{position:absolute;inset:0;background:
   radial-gradient(circle,rgba(0,0,0,.3) 1px,transparent 1.6px) 0 0/4px 4px,
   radial-gradient(ellipse at 50% 45%,transparent 35%,rgba(4,12,10,.6) 100%),
@@ -273,9 +275,9 @@ body{overflow:hidden;font-size:16px}
   setInterval(paintClock,250);
 
   // ---- background slideshow ----
-  // backgrounds/list.json names the photos in backgrounds/. They play in a shuffled loop; each one covers
-  // the screen with room to spare and drifts across it: tall photos down from the top (where faces
-  // usually are), wide ones sideways, with a slow zoom.
+  // backgrounds/list.json names the photos in backgrounds/. They play in a shuffled loop, each drifting
+  // with a slow zoom. A photo close to the screen's shape fills it; one much taller (or wider) is shown
+  // whole at full height, so it isn't blown up and cropped, over a blurred copy of itself.
   var SLIDE_MS=9000, FADE_MS=1600;
   var bgLayers=document.querySelectorAll(".bg-img"), bgList=[], bgAt=0, bgFront=0, bgTimer=null, bgFails=0;
   var still=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -295,19 +297,36 @@ body{overflow:hidden;font-size:16px}
   }
   function showBg(img){
     bgFront=1-bgFront;
-    var layer=bgLayers[bgFront], W=innerWidth, H=innerHeight, a=img.naturalWidth/img.naturalHeight;
-    var tall=a<W/H, w=tall?W*1.12:H*1.12*a, h=tall?w/a:H*1.12;
+    var layer=bgLayers[bgFront], W=innerWidth, H=innerHeight, A=W/H, a=img.naturalWidth/img.naturalHeight, r=Math.random;
+    var w, h, from, to, zoomIn=r()<.5;
+    layer.innerHTML="";
+    if(a/A>.75&&a/A<1.33){
+      var tall=a<A; w=tall?W*1.06:H*1.06*a; h=tall?w/a:H*1.06;
+      // Any position between (W-w, H-h) and (0, 0) keeps the screen covered, and zooming in from the top-left corner never opens a gap.
+      var dx=W-w, dy=H-h;
+      from=[dx*r(),dy*r()]; to=[dx-from[0],dy-from[1]];
+    } else {
+      layer.appendChild(blurCopy(img,A));
+      img.className="panel";
+      if(a<A){ h=H; w=H*a; var x=(W-w)*(.15+.7*r()); from=[x,0]; to=[x+(r()<.5?-1:1)*W*.04,0]; }
+      else { w=W; h=W/a; var y=(H-h)*(.15+.7*r()); from=[0,y]; to=[0,y+(r()<.5?-1:1)*H*.04]; }
+    }
     img.style.width=w+"px"; img.style.height=h+"px";
-    // Any position between (W-w, H-h) and (0, 0) keeps the screen covered, and zooming in from the top-left corner never opens a gap.
-    var dx=W-w, dy=H-h, r=Math.random;
-    var from=tall?[dx*r(),dy*.08]:[dx*(r()<.5?.05:.95),dy*.4];
-    var to=tall?[dx*r(),dy*.38]:[dx-from[0],dy*.6];
-    var zoomIn=r()<.5, move=function(p,s){ return "translate("+p[0]+"px,"+p[1]+"px) scale("+s+")"; };
-    layer.innerHTML=""; layer.appendChild(img);
-    if(!still&&img.animate) img.animate([{transform:move(from,zoomIn?1:1.08)},{transform:move(to,zoomIn?1.08:1)}],
+    var move=function(p,s){ return "translate("+p[0]+"px,"+p[1]+"px) scale("+s+")"; };
+    layer.appendChild(img);
+    if(!still&&img.animate) img.animate([{transform:move(from,zoomIn?1:1.05)},{transform:move(to,zoomIn?1.05:1)}],
       {duration:SLIDE_MS+FADE_MS*2,easing:"ease-in-out",fill:"forwards"});
-    else img.style.transform=move([dx/2,dy*.2],1);
+    else img.style.transform=move(from,1);
     layer.classList.add("on"); bgLayers[1-bgFront].classList.remove("on");
+  }
+  // The screen-filling blurred copy: the photo drawn tiny, then stretched, which blurs it for free.
+  function blurCopy(img,A){
+    var c=document.createElement("canvas"), x=c.getContext("2d"), sw=img.naturalWidth, sh=img.naturalHeight;
+    c.width=48; c.height=Math.max(1,Math.round(48/A));
+    if(sw/sh>A) sw=sh*A; else sh=sw/A;
+    if("filter" in x) x.filter="blur(1.5px)";
+    x.drawImage(img,(img.naturalWidth-sw)/2,(img.naturalHeight-sh)*.3,sw,sh,0,0,c.width,c.height);
+    return c;
   }
   // A new screen size (turning the TV, leaving fullscreen) needs the photo laid out again.
   var bgResize=null;
