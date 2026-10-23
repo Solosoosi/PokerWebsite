@@ -9,18 +9,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="theme.css">
 <style>
-body{overflow:hidden}
-.tv{height:100vh;height:100dvh;display:grid;grid-template-rows:auto 1fr auto;gap:2vh;padding:2.6vh 3vw 3vh}
-.top{display:flex;justify-content:space-between;align-items:center;gap:2vw}
-.brand{display:flex;align-items:baseline;gap:1.2vw;min-width:0}
-.brand .suits{font-size:2.4vh;letter-spacing:.3em}
-.brand .lg{font-size:3.8vh;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brand .round{color:var(--muted);font-size:2.4vh;white-space:nowrap}
-.top-right{display:flex;align-items:center;gap:1.4vw}
-.conn{color:var(--muted);font-size:1.9vh;white-space:nowrap}
-.conn .dot{display:inline-block;width:1vh;height:1vh;border-radius:50%;background:var(--rose);margin-right:.7vh;vertical-align:middle}
+/* 1rem is the size unit for this screen: 1% of the height on a 16:9 TV, and smaller on narrower
+   screens so nothing runs off the side. Portrait screens get a stacked layout (bottom of this block). */
+html{font-size:min(1vh,.6vw)}
+body{overflow:hidden;font-size:16px}
+.tv{height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:2rem;padding:2.6rem 3vw 3rem}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem 2rem}
+.brand{display:flex;align-items:baseline;gap:1.2rem;min-width:0;flex:1 1 auto}
+.brand .suits{font-size:2.4rem;letter-spacing:.3em}
+.brand .lg{font-size:3.8rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand .round{color:var(--muted);font-size:2.4rem;white-space:nowrap}
+.top-right{display:flex;align-items:center;gap:1.4rem;min-width:0;margin-left:auto}
+.conn{color:var(--muted);font-size:1.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.conn .dot{display:inline-block;width:1rem;height:1rem;border-radius:50%;background:var(--rose);margin-right:.7rem;vertical-align:middle}
 .conn.on .dot{background:var(--brass)}
-.top-btn{font-size:1.9vh;padding:.9vh 1.4vw}
+.top-btn{flex:none;font-size:1.9rem;padding:.9rem 1.4rem}
 :fullscreen .fs{display:none}
 .ctl-panel{position:fixed;top:0;right:0;bottom:0;width:min(440px,94vw);z-index:20;display:none;flex-direction:column;
   background:var(--bg2);border-left:1px solid var(--line);box-shadow:-12px 0 30px rgba(0,0,0,.45)}
@@ -29,53 +32,83 @@ body{overflow:hidden}
 .ctl-panel .bar .btn{font-size:14px;padding:7px 14px}
 .ctl-panel iframe{flex:1;width:100%;border:0;background:var(--bg2)}
 
-.stage{display:grid;grid-template-columns:1fr 25vw;gap:3vw;min-height:0}
-.clockbox{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:0}
-.lvl{font-size:4vh;color:var(--muted)}
-.lvl .paused{display:none;font-family:Inter,sans-serif;font-size:2.2vh;font-weight:600;color:var(--rose);border:1px solid var(--rose);border-radius:999px;padding:.3vh 1.2vh;margin-left:1.2vh;vertical-align:middle;letter-spacing:.08em;text-transform:uppercase}
-.lvl .paused.on{display:inline-block}
-.time{font-weight:600;font-variant-numeric:tabular-nums;font-size:min(15vw,28vh);line-height:1;letter-spacing:-.01em;margin:1.2vh 0 2.4vh}
-.time.paused{color:var(--muted)}
-.time.final{font-family:Fraunces,Georgia,serif;font-weight:500;color:var(--brass);font-size:min(9vw,16vh)}
-.blinds{display:flex;align-items:baseline;gap:1.4vw}
-.blinds .lab,.next .lab{font-size:2.4vh;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
-.blinds .big{font-family:Fraunces,Georgia,serif;font-size:10vh;color:var(--brass);line-height:1}
-.next{font-size:3.4vh;margin-top:2vh;display:flex;align-items:baseline;gap:1vw;font-variant-numeric:tabular-nums}
-.next .dur{color:var(--muted);font-size:2.4vh}
-.note{font-size:2.5vh;color:var(--muted);margin-top:1vh}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(24rem,25vw);gap:3vw;min-height:0}
+.clockbox{display:flex;align-items:center;justify-content:center;min-height:0;min-width:0;overflow:hidden}
+/* Scaled down by fit() when lots of player cards leave the clock less room. */
+.clockin{display:flex;flex-direction:column;align-items:center;text-align:center;flex:none;text-shadow:0 .3rem 2.4rem rgba(0,0,0,.75),0 .1rem .4rem rgba(0,0,0,.6)}
+.top{text-shadow:0 .2rem 1rem rgba(0,0,0,.7)}
 
-.side{display:flex;flex-direction:column;gap:2vh;min-height:0}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:1.6vh;padding:1.6vh 1.6vw}
-.stand{flex:1;min-height:0;overflow:hidden}
-.side-h{font-family:Fraunces,Georgia,serif;font-size:2.7vh;margin-bottom:1vh}
-.stand ol{list-style:none;margin:0;padding:0}
-.stand li{display:grid;grid-template-columns:3vh 1fr auto;gap:1vw;align-items:center;font-size:2.3vh;padding:.55vh 0;border-top:1px solid var(--line-soft)}
+/* Background: the group's photos, GTA loading-screen style. Each one fades in and drifts slowly
+   (moved by JS), punched up and printed with halftone dots under a dark green tint so the clock stays readable. */
+.tv{position:relative}
+.bg{position:fixed;inset:0;overflow:hidden;background:linear-gradient(180deg,var(--bg1),var(--bg2))}
+.bg-img{position:absolute;inset:0;opacity:0;transition:opacity 1.6s ease}
+.bg-img.on{opacity:1}
+.bg-img img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;filter:saturate(1.7) contrast(1.3) brightness(1.05);will-change:transform}
+.bg-tone{position:absolute;inset:0;background:
+  radial-gradient(circle,rgba(0,0,0,.3) 1px,transparent 1.6px) 0 0/4px 4px,
+  radial-gradient(ellipse at 50% 45%,transparent 35%,rgba(4,12,10,.6) 100%),
+  linear-gradient(180deg,rgba(15,38,32,.25),rgba(15,38,32,.45) 45%,rgba(15,38,32,.75))}
+.lvl{font-size:4rem;color:var(--muted)}
+.lvl .paused{display:none;font-family:Inter,sans-serif;font-size:2.2rem;font-weight:600;color:var(--rose);border:1px solid var(--rose);border-radius:999px;padding:.3rem 1.2rem;margin-left:1.2rem;vertical-align:middle;letter-spacing:.08em;text-transform:uppercase}
+.lvl .paused.on{display:inline-block}
+.time{font-weight:600;font-variant-numeric:tabular-nums;font-size:min(15vw,28rem);line-height:1;letter-spacing:-.01em;margin:1.2rem 0 2.4rem;white-space:nowrap}
+.time.paused{color:#B9C9C0}
+.time.final{font-family:Fraunces,Georgia,serif;font-weight:500;color:var(--brass);font-size:min(9vw,16rem)}
+.blinds{display:flex;align-items:baseline;gap:1.4rem}
+.blinds .lab,.next .lab{font-size:2.4rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.blinds .big{font-family:Fraunces,Georgia,serif;font-size:10rem;color:var(--brass);line-height:1;white-space:nowrap}
+.next{font-size:3.4rem;margin-top:2rem;display:flex;align-items:baseline;gap:1rem;font-variant-numeric:tabular-nums}
+.next .dur{color:var(--muted);font-size:2.4rem}
+.note{font-size:2.5rem;color:var(--muted);margin-top:1rem}
+
+.side{display:flex;flex-direction:column;gap:2rem;min-height:0;min-width:0}
+.card{background:rgba(24,53,46,.86);border:1px solid var(--line);border-radius:1.6rem;padding:1.6rem}
+.stand{flex:1;min-height:0;min-width:0;overflow:hidden}
+.side-h{font-family:Fraunces,Georgia,serif;font-size:2.7rem;margin-bottom:1rem}
+/* Font size set by fit() so every player's row fits in the box. */
+.stand ol{list-style:none;margin:0;padding:0;font-size:2.3rem}
+.stand li{display:grid;grid-template-columns:1.3em minmax(0,1fr) auto;gap:.5em;align-items:center;padding:.24em 0;border-top:1px solid var(--line-soft)}
 .stand li:first-child{border-top:0}
 .stand .rk{color:var(--muted);font-variant-numeric:tabular-nums}
 .stand .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stand .pt{font-weight:600;font-variant-numeric:tabular-nums}
 .stand li.lead .rk,.stand li.lead .pt{color:var(--brass)}
-.stand li.wait{display:block;color:var(--muted);font-size:2.2vh}
-.join{display:flex;gap:1.4vw;align-items:center}
-.qr{width:14vh;height:14vh;flex:none;background:var(--cream);padding:1vh;border-radius:1vh}
+.stand li.wait{display:block;color:var(--muted);font-size:2.2rem}
+.stand ol.two{column-count:2;column-gap:1.4em} .stand ol.two li{break-inside:avoid}
+.join{display:flex;gap:1.4rem;align-items:center}
+.qr{width:14rem;height:14rem;flex:none;background:var(--cream);padding:1rem;border-radius:1rem}
 .qr svg{display:block;width:100%;height:100%}
 
-.players{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:1.4vw}
-.pc{background:var(--surface);border:1px solid var(--line);border-radius:1.6vh;padding:1.2vh;text-align:center;position:relative;min-width:0}
-.pc .avatar{height:16vh;border-radius:1.1vh;font-size:8vh}
-.pc .nm{font-size:2.6vh;font-weight:600;margin-top:1vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pc .sub{font-size:1.9vh;color:var(--muted);min-height:1.5em}
+/* fit() picks the columns (--cols, --rows) for the number of players and the width of the screen. */
+.players{display:grid;grid-template-columns:repeat(var(--cols,7),minmax(0,1fr));gap:1.2rem;--ah:calc(5rem + 11rem / var(--rows,1))}
+.pc{background:rgba(24,53,46,.86);border:1px solid var(--line);border-radius:1.6rem;padding:1.2rem;text-align:center;position:relative;min-width:0}
+.pc .avatar{height:var(--ah);border-radius:1.1rem;font-size:calc(var(--ah) / 2)}
+.pc .nm{font-size:2.6rem;font-weight:600;margin-top:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc .sub{font-size:1.9rem;color:var(--muted);min-height:1.5em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pc .sub b{color:var(--cream);font-weight:600}
-.pc.out{background:var(--bg2)}
+.pc.out{background:rgba(15,38,32,.92)}
 .pc.out .avatar{filter:grayscale(1) brightness(.5)}
 .pc.out .nm{color:var(--muted)}
-.pc .stamp{position:absolute;top:6vh;left:50%;transform:translateX(-50%) rotate(-10deg);font-weight:600;font-size:4.6vh;line-height:1.1;letter-spacing:.14em;color:var(--rose);border:.45vh solid var(--rose);border-radius:1vh;padding:.2vh 1.4vh;background:rgba(15,38,32,.6)}
+.pc .stamp{position:absolute;top:calc(1.2rem + var(--ah) / 2);left:50%;transform:translate(-50%,-50%) rotate(-10deg);font-weight:600;font-size:min(4.6rem,calc(var(--cw,30rem) * .17));line-height:1.1;letter-spacing:.14em;color:var(--rose);border:.45rem solid var(--rose);border-radius:1rem;padding:.2rem 1.4rem;background:rgba(15,38,32,.6)}
 .pc.win{border-color:var(--brass);background:rgba(203,168,106,.12)}
-.pc .crown{position:absolute;top:.2vh;right:1.2vh;color:var(--brass);font-size:4.4vh;text-shadow:0 .3vh 1vh rgba(0,0,0,.5)}
-.players .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:2.8vh;padding:5vh 0}
+.pc .crown{position:absolute;top:.2rem;right:1.2rem;color:var(--brass);font-size:4.4rem;text-shadow:0 .3rem 1rem rgba(0,0,0,.5)}
+.players .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:2.8rem;padding:5rem 0}
+
+/* Portrait or near-square screens: clock on top, standings and QR side by side, players below. */
+@media (max-aspect-ratio:1/1){
+  html{font-size:min(1vw,.55vh)}
+  .stage{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(26rem,1fr);gap:3rem}
+  .time{font-size:min(24vw,30rem)}
+  .time.final{font-size:min(14vw,16rem)}
+  .side{flex-direction:row}
+  .join{flex-direction:column;justify-content:center;text-align:center;flex:none;width:30%}
+  .qr{width:min(18rem,100%);height:auto;aspect-ratio:1}
+}
 </style>
 </head>
 <body>
+<div class="bg" aria-hidden="true"><div class="bg-img"></div><div class="bg-img"></div><div class="bg-tone"></div></div>
 <div class="tv">
   <header class="top">
     <div class="brand">
@@ -90,13 +123,13 @@ body{overflow:hidden}
     </div>
   </header>
   <main class="stage">
-    <div class="clockbox">
+    <div class="clockbox" id="clockbox"><div class="clockin" id="clockin">
       <div class="lvl serif"><span id="lvl">Level 1</span><span class="paused" id="paused">Paused</span></div>
       <div class="time" id="time">30:00</div>
       <div class="blinds"><span class="lab">Blinds</span><span class="big" id="blinds">5 / 1</span></div>
       <div class="next" id="next"></div>
       <div class="note" id="note"></div>
-    </div>
+    </div></div>
     <aside class="side">
       <div class="card stand"><div class="side-h">Standings</div><ol id="stand"></ol></div>
       <div class="card join">
@@ -158,7 +191,36 @@ body{overflow:hidden}
     renderStandings(lg);
     renderPlayers(lg);
     paintClock();
+    fit();
   }
+  // Fit the screen, whatever its shape: player cards in one row when they're wide enough, otherwise
+  // in even rows; the standings text shrinks until every player's row fits in the box (two columns
+  // rather than unreadably small); the clock scales down to the room the cards leave it.
+  function fit(){
+    var u=parseFloat(getComputedStyle(document.documentElement).fontSize);
+    var box=$("players"), n=box.querySelectorAll(".pc").length;
+    if(n){
+      var gap=1.2*u, W=box.clientWidth;
+      var cols=Math.max(1,Math.min(n,Math.floor((W+gap)/(13*u+gap)))), rows=Math.ceil(n/cols);
+      cols=Math.ceil(n/rows);
+      box.style.setProperty("--cols",cols); box.style.setProperty("--rows",rows);
+      box.style.setProperty("--cw",(W-gap*(cols-1))/cols+"px");
+    }
+    var ol=$("stand"), card=ol.parentNode;
+    ol.style.fontSize=""; ol.classList.remove("two");
+    var room=card.getBoundingClientRect().bottom-parseFloat(getComputedStyle(card).paddingBottom)-ol.getBoundingClientRect().top;
+    var base=parseFloat(getComputedStyle(ol).fontSize);
+    if(room>0&&ol.scrollHeight>room){
+      if(base*room/ol.scrollHeight<1.6*u) ol.classList.add("two");
+      if(ol.scrollHeight>room) ol.style.fontSize=base*room/ol.scrollHeight+"px";
+    }
+    var cb=$("clockbox"), ci=$("clockin");
+    ci.style.transform="";
+    var k=Math.min(1,cb.clientHeight/ci.offsetHeight,cb.clientWidth/ci.offsetWidth);
+    if(k<1) ci.style.transform="scale("+k+")";
+  }
+  window.addEventListener("resize",fit);
+  if(document.fonts) document.fonts.ready.then(fit);
   function renderStandings(lg){
     var ol=$("stand"); ol.innerHTML="";
     if(!lg){ ol.innerHTML='<li class="wait">Waiting for a phone to connect&hellip;</li>'; return; }
@@ -175,16 +237,17 @@ body{overflow:hidden}
     var ids=night?night.playing:lg.players.map(function(p){return p.id;});
     if(night) $("round").textContent="Round "+night.round+" of "+L.ROUNDS+(v.done?"":" · "+v.alive.length+" of "+ids.length+" left");
     ids.forEach(function(pid){
-      var p={name:L.playerName(lg,night,pid)};
+      var p=lg.players.filter(function(x){ return x.id===pid; })[0]||{name:L.playerName(lg,night,pid)};
+      var photo=state.photos&&state.photos[pid]&&state.photos[pid].d;
       var i=v?v.info[pid]:{entries:1,out:false,place:null,kos:0}, win=!!v&&v.winner===pid;
       var bits=[];
-      if(i.guest) bits.push("Guest");
+      if(p.guest) bits.push("Guest");
       if(i.out&&i.place) bits.push(L.ordinal(i.place));
       else if(win) bits.push("Winner");
       else if(!i.out&&i.entries>1) bits.push("2nd entry");
       if(i.kos) bits.push("<b>"+i.kos+"</b> KO");
       var c=document.createElement("div"); c.className="pc"+(i.out?" out":"")+(win?" win":"");
-      c.innerHTML=L.avatar(p.name)+'<div class="nm">'+L.esc(p.name)+'</div><div class="sub">'+bits.join(" · ")+'</div>'+
+      c.innerHTML=L.avatar(p.name,photo)+'<div class="nm">'+L.esc(p.name)+'</div><div class="sub">'+bits.join(" · ")+'</div>'+
         (i.out?'<div class="stamp">OUT</div>':'')+(win?'<div class="crown">&#9819;</div>':'');
       box.appendChild(c);
     });
@@ -195,17 +258,60 @@ body{overflow:hidden}
   function paintClock(){
     var c=(state&&state.clock)||L.newClock(), v=L.clockAt(c,Date.now()), lv=L.LEVELS[v.i], nx=L.LEVELS[v.i+1];
     if(lastLevel!==null&&v.i>lastLevel) beep();
+    var refit=lastLevel!==v.i;
     lastLevel=v.i;
     $("lvl").textContent="Level "+(v.i+1);
-    $("paused").classList.toggle("on",!v.running&&!v.final&&v.remaining<lv.mins*60);
+    $("paused").classList.toggle("on",!v.running&&!v.final&&v.remaining!==lv.mins*60);
     var t=$("time");
     if(v.final){ t.textContent="Final level"; t.className="time final"; }
     else { t.textContent=L.fmtClock(v.remaining); t.className="time"+(v.running?"":" paused"); }
     $("blinds").textContent=lv.big+" / "+lv.small;
     $("next").innerHTML=nx?'<span class="lab">Next</span><span>'+nx.big+" / "+nx.small+'</span><span class="dur">'+(nx.mins!=null?nx.mins+" min":"to the finish")+'</span>':"";
     $("note").textContent=lv.note;
+    if(refit) fit(); // "Final level" and the next-level line change the clock's size
   }
   setInterval(paintClock,250);
+
+  // ---- background slideshow ----
+  // backgrounds/list.json names the photos in backgrounds/. They play in a shuffled loop; each one covers
+  // the screen with room to spare and drifts across it: tall photos down from the top (where faces
+  // usually are), wide ones sideways, with a slow zoom.
+  var SLIDE_MS=9000, FADE_MS=1600;
+  var bgLayers=document.querySelectorAll(".bg-img"), bgList=[], bgAt=0, bgFront=0, bgTimer=null, bgFails=0;
+  var still=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  fetch("backgrounds/list.json").then(function(r){ return r.ok?r.json():[]; }).then(function(list){
+    bgList=list.slice();
+    for(var i=bgList.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=bgList[i]; bgList[i]=bgList[j]; bgList[j]=t; }
+    if(bgList.length) nextBg();
+  }).catch(function(){});
+  function nextBg(){
+    clearTimeout(bgTimer);
+    if(document.hidden){ bgTimer=setTimeout(nextBg,SLIDE_MS); return; }
+    var img=new Image(); img.alt="";
+    img.onload=function(){ bgFails=0; showBg(img); bgTimer=setTimeout(nextBg,SLIDE_MS); };
+    img.onerror=function(){ if(++bgFails<bgList.length) bgTimer=setTimeout(nextBg,200); };
+    img.src="backgrounds/"+encodeURIComponent(bgList[bgAt]);
+    bgAt=(bgAt+1)%bgList.length;
+  }
+  function showBg(img){
+    bgFront=1-bgFront;
+    var layer=bgLayers[bgFront], W=innerWidth, H=innerHeight, a=img.naturalWidth/img.naturalHeight;
+    var tall=a<W/H, w=tall?W*1.12:H*1.12*a, h=tall?w/a:H*1.12;
+    img.style.width=w+"px"; img.style.height=h+"px";
+    // Any position between (W-w, H-h) and (0, 0) keeps the screen covered, and zooming in from the top-left corner never opens a gap.
+    var dx=W-w, dy=H-h, r=Math.random;
+    var from=tall?[dx*r(),dy*.08]:[dx*(r()<.5?.05:.95),dy*.4];
+    var to=tall?[dx*r(),dy*.38]:[dx-from[0],dy*.6];
+    var zoomIn=r()<.5, move=function(p,s){ return "translate("+p[0]+"px,"+p[1]+"px) scale("+s+")"; };
+    layer.innerHTML=""; layer.appendChild(img);
+    if(!still&&img.animate) img.animate([{transform:move(from,zoomIn?1:1.08)},{transform:move(to,zoomIn?1.08:1)}],
+      {duration:SLIDE_MS+FADE_MS*2,easing:"ease-in-out",fill:"forwards"});
+    else img.style.transform=move([dx/2,dy*.2],1);
+    layer.classList.add("on"); bgLayers[1-bgFront].classList.remove("on");
+  }
+  // A new screen size (turning the TV, leaving fullscreen) needs the photo laid out again.
+  var bgResize=null;
+  window.addEventListener("resize",function(){ if(!bgList.length) return; clearTimeout(bgResize); bgResize=setTimeout(nextBg,400); });
 
   // ---- sound ----
   var ac=null;
